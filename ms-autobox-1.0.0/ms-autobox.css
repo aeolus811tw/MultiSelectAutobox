@@ -37,6 +37,7 @@
 	border: 1px solid #ccc;
 	box-sizing: border-box;
 	font: inherit;
+	width: 100%;
 }
 
 .ms-autobox-option{
