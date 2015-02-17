@@ -75,13 +75,14 @@ $.widget("aekt.msautobox", {
 			$this._menu_div.css("height", 25 * result.length).show();
 			$.each(result, function(index, val){
 				//for each result we have to create an option for it
-				var $div = $("<div/>", {id: val.id, "class" : "ms-autobox-result-option", html : val.name}).data("val", val);
+				var $div = $("<div/>", {id: val.id, "class" : "ms-autobox-result-option", html : val.name}).data("val", val).css("width", 100%);
 				$this._menu_div.append($div);
 				$div.click(function(e){
 					var _val = $(this).data("val");
 					$this.options.selected.push({id: _val.id, name: _val.name});
 					$this._main_div.removeClass("highlight");
 					$this._menu_div.hide();
+					$this._field_input.focus();
 					$this.refresh();
 				});
 			});
