@@ -1,7 +1,7 @@
 $.widget("aekt.msautobox", {
 	options: {
 		date: new Date(),
-		mode: "s",
+		mode: "t",
 		debug: false,
 		style: {},
 		selected: [],
@@ -9,10 +9,13 @@ $.widget("aekt.msautobox", {
 		listSize: 10,
 		caseSensitive: false
 	},
+	_selectedResult: null,
 	_index: 0,
+	_maxIndex: 0,
 	_main_div: null,
 	_field_input: null,
 	_menu_div: null,
+	_menu_container: null,
 	_option_div: null,
 	_create: function(){
 		var $this = this;
@@ -36,7 +39,29 @@ $.widget("aekt.msautobox", {
 			$this._main_div.addClass("highlight");
 			$(this).keyup();
 		}).keyup(function(e){
-			$this._buildResult();
+			switch (e.which){
+				case 13: $this._selectedResult.click();
+					     break; //enter key
+				case 27: $this._menu_div.hide(); break;
+		        case 37: break; //left
+		        case 38: break; //up
+		        case 39: break; //right
+		        case 40: break; //down
+				default: $this._buildResult(); break; 
+			}
+		}).keydown(function(e){
+			switch (e.which){
+				case 13: break; //enter key
+		        case 37: break; //left
+		        case 39: break; //right		        
+		        case 38: if ($this._index > 0) $this._index--;
+		        		 $this._refreshMenu();
+		        		 break; //up
+		        case 40: if ($this._index < $this._maxIndex) $this._index++;
+		        		 $this._refreshMenu();
+		        		 break; //down
+				default: $this._buildResult(); break;
+			}			
 		});
 		$this._main_div.mouseout(function(e){
 			$this._field_input.blur(function(e){
@@ -47,9 +72,11 @@ $.widget("aekt.msautobox", {
 		$this._menu_div.mouseover(function(e){
 			$this._field_input.off("blur");
 		});
-		$this._menu_div.css("width", $this._main_div.width() + 2).css("height", 25 * $this.options.listSize).hide();
+		$this._menu_container = $("<div/>", {"class": "ms-autobox-menu-container"});
+		$this._menu_container.css("width", $this._main_div.width() + 2).css("height", 25 * $this.options.listSize).hide();
+		$this._menu_container.append($this._menu_div);
 		//add the menu
-		$this._main_div.append($this._option_div).append($this._field_input).append($this._menu_div);
+		$this._main_div.append($this._option_div).append($this._field_input).append($this._menu_container);
 		$this.element.after($this._main_div);
 		$this.element.hide(); //we hide the main element
 		$this._main_div.show();
@@ -72,10 +99,14 @@ $.widget("aekt.msautobox", {
 		$this._menu_div.children().remove();
 		if (result && result.length > 0){
 			//if we have any result
-			$this._menu_div.css("height", 25 * result.length).show();
+			if (result.length < $this.options.listSize){
+				$this._menu_container.css("width", $this._main_div.width() + 2).css("height", 25 * result.length).show();
+			}else{
+				$this._menu_container.css("width", $this._main_div.width() + 2).css("height", 25 * $this.options.listSize).show();
+			}
 			$.each(result, function(index, val){
 				//for each result we have to create an option for it
-				var $div = $("<div/>", {id: val.id, "class" : "ms-autobox-result-option", html : val.name}).data("val", val).css("width", "100%");
+				var $div = $("<div/>", {id: val.id, "class" : "ms-autobox-result-option", html : val.name}).data("val", val).data("index", index).css("width", "100%");
 				$this._menu_div.append($div);
 				$div.click(function(e){
 					var _val = $(this).data("val");
@@ -84,11 +115,25 @@ $.widget("aekt.msautobox", {
 					$this._menu_div.hide();
 					$this._field_input.focus();
 					$this.refresh();
+				}).mouseenter(function(e){
+					if ($this._selectedResult != null) $this._selectedResult.removeClass("selected-result");
+					$this._selectedResult = $(this).addClass("selected-result");
+					$this._index = $this._selectedResult.data("index");
 				});
 			});
+			$this._index = -1;
+			$this._maxIndex = result.length - 1;
+			$this._selectedResult = null;
 			$this._menu_div.show();
 		}else{
 			$this._menu_div.hide();
+		}
+	},
+	_refreshMenu: function(){
+		var $this = this;
+		if ($this._index >= 0){
+			if ($this._selectedResult != null) $this._selectedResult.removeClass("selected-result");
+			$this._selectedResult = $this._menu_div.find(":nth-child("+($this._index+1)+")").addClass("selected-result");
 		}
 	},
 	selected: function(){
@@ -105,7 +150,11 @@ $.widget("aekt.msautobox", {
 			var $opt = $("<div/>", { "class" : "ms-autobox-options"}).data("id", val.id);
 			var $optLabel = $("<div/>", { "class" : "ms-autobox-label", html : val.name});
 			var $optRemover = $("<div/>", {html : "x", "class" : "ms-autobox-option-remover"}).data("index", index).click(function(e){
-				$this.options.selected.splice($(this).data("index"), $this.options.selected.length); 
+				if ($this.options.mode == "t"){
+					$this.options.selected.splice($(this).data("index"), $this.options.selected.length);	
+				}else{
+					$this.options.selected.splice($(this).data("index"), 1);
+				}
 				$this.refresh();
 			});
 			$opt.append($optLabel).append($optRemover);
@@ -116,19 +165,21 @@ $.widget("aekt.msautobox", {
 	search: function(term){
 		var list = this.options.data;
 		if (list){
-			var _t_val = null;
-			$.each(this.options.selected, function(index, val){
+			if (this.options.mode == "t"){
+				var _t_val = null;
+				$.each(this.options.selected, function(index, val){
 
-				_t_val = null;
-				$.each(list, function(_index, _val){
-					if (_val.id == val.id){
-						_t_val = _val;
-						return false;
-					}
+					_t_val = null;
+					$.each(list, function(_index, _val){
+						if (_val.id == val.id){
+							_t_val = _val;
+							return false;
+						}
+					});
+					if (_t_val == null) throw "invalid parent value detected";
+					else list = _t_val.children;
 				});
-				if (_t_val == null) throw "invalid parent value detected";
-				else list = _t_val.children;
-			});
+			}
 			if (list && list.length){
 				var result;
 				//this is an array to search through, we split into two to increase performance, although they are very similar
