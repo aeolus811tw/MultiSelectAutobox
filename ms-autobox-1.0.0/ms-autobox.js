@@ -75,7 +75,9 @@ $.widget("aekt.msautobox", {
 		$this.refresh();//refresh the view
 	},
 	_setOption: function(key, value) {
-		this.options[key] = value;
+		if (ket == "selected") this._selected = value;
+		else
+			this.options[key] = value;
 	},
 	//the destroy function
 	destroy: function() {
@@ -127,6 +129,10 @@ $.widget("aekt.msautobox", {
 			if ($this._selectedResult != null) $this._selectedResult.removeClass("selected-result");
 			$this._selectedResult = $this._menu_div.find(":nth-child("+($this._index+1)+")").addClass("selected-result");
 		}
+	},
+	reset: function(){
+		this._selected = [];
+		this.refresh();
 	},
 	selected: function(){
 		//we abuse the grep function to clone an array
