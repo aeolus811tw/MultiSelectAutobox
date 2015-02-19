@@ -10,7 +10,7 @@ $.widget("aekt.msautobox", {
 	},
 	_create: function(){
 		var $this = this;
-		$this.selected = [];
+		$this._selected = [];
 		if ($this.element.prop("tagName").toLowerCase() != "input")
 			throw "msautobox: must be initialized with input tag only";
 		$this.element.children().remove();
@@ -102,7 +102,7 @@ $.widget("aekt.msautobox", {
 				$this._menu_div.append($div);
 				$div.click(function(e){
 					var _val = $(this).data("val");
-					$this.selected.push({id: _val.id, name: _val.name});
+					$this._selected.push({id: _val.id, name: _val.name});
 					$this._main_div.removeClass("highlight");
 					$this._menu_div.hide();
 					$this._field_input.focus();
@@ -130,22 +130,22 @@ $.widget("aekt.msautobox", {
 	},
 	selected: function(){
 		//we abuse the grep function to clone an array
-		var result = $.grep(this.selected, function(e){return true;});
+		var result = $.grep(this._selected, function(e){return true;});
 		return result;
 	},
 	refresh: function(){
 		var $this = this;
 		var $options = $this._option_div;
 		$options.children().remove(); // remove all the children
-		$.each(this.selected, function(index, val){
+		$.each(this._selected, function(index, val){
 			//add options to children
 			var $opt = $("<div/>", { "class" : "ms-autobox-options"}).data("id", val.id);
 			var $optLabel = $("<div/>", { "class" : "ms-autobox-label", html : val.name});
 			var $optRemover = $("<div/>", {html : "x", "class" : "ms-autobox-option-remover"}).data("index", index).click(function(e){
 				if ($this.options.mode == "t"){
-					$this.selected.splice($(this).data("index"), $this.selected.length);	
+					$this._selected.splice($(this).data("index"), $this._selected.length);	
 				}else{
-					$this.selected.splice($(this).data("index"), 1);
+					$this._selected.splice($(this).data("index"), 1);
 				}
 				$this.refresh();
 			});
@@ -159,7 +159,7 @@ $.widget("aekt.msautobox", {
 		if (list){
 			if (this.options.mode == "t"){
 				var _t_val = null;
-				$.each(this.selected, function(index, val){
+				$.each(this._selected, function(index, val){
 
 					_t_val = null;
 					$.each(list, function(_index, _val){
