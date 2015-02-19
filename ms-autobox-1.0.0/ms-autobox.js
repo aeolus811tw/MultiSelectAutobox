@@ -4,21 +4,13 @@ $.widget("aekt.msautobox", {
 		mode: "t",
 		debug: false,
 		style: {},
-		selected: [],
 		data: [],
 		listSize: 10,
 		caseSensitive: false
 	},
-	_selectedResult: null,
-	_index: 0,
-	_maxIndex: 0,
-	_main_div: null,
-	_field_input: null,
-	_menu_div: null,
-	_menu_container: null,
-	_option_div: null,
 	_create: function(){
 		var $this = this;
+		$this.selected = [];
 		if ($this.element.prop("tagName").toLowerCase() != "input")
 			throw "msautobox: must be initialized with input tag only";
 		$this.element.children().remove();
@@ -110,7 +102,7 @@ $.widget("aekt.msautobox", {
 				$this._menu_div.append($div);
 				$div.click(function(e){
 					var _val = $(this).data("val");
-					$this.options.selected.push({id: _val.id, name: _val.name});
+					$this.selected.push({id: _val.id, name: _val.name});
 					$this._main_div.removeClass("highlight");
 					$this._menu_div.hide();
 					$this._field_input.focus();
@@ -138,22 +130,22 @@ $.widget("aekt.msautobox", {
 	},
 	selected: function(){
 		//we abuse the grep function to clone an array
-		var result = $.grep(this.options.selected, function(e){return true;});
+		var result = $.grep(this.selected, function(e){return true;});
 		return result;
 	},
 	refresh: function(){
 		var $this = this;
 		var $options = $this._option_div;
 		$options.children().remove(); // remove all the children
-		$.each(this.options.selected, function(index, val){
+		$.each(this.selected, function(index, val){
 			//add options to children
 			var $opt = $("<div/>", { "class" : "ms-autobox-options"}).data("id", val.id);
 			var $optLabel = $("<div/>", { "class" : "ms-autobox-label", html : val.name});
 			var $optRemover = $("<div/>", {html : "x", "class" : "ms-autobox-option-remover"}).data("index", index).click(function(e){
 				if ($this.options.mode == "t"){
-					$this.options.selected.splice($(this).data("index"), $this.options.selected.length);	
+					$this.selected.splice($(this).data("index"), $this.selected.length);	
 				}else{
-					$this.options.selected.splice($(this).data("index"), 1);
+					$this.selected.splice($(this).data("index"), 1);
 				}
 				$this.refresh();
 			});
@@ -167,7 +159,7 @@ $.widget("aekt.msautobox", {
 		if (list){
 			if (this.options.mode == "t"){
 				var _t_val = null;
-				$.each(this.options.selected, function(index, val){
+				$.each(this.selected, function(index, val){
 
 					_t_val = null;
 					$.each(list, function(_index, _val){
