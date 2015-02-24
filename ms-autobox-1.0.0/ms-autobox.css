@@ -33,6 +33,7 @@
 .ms-autobox-menu-container{
 	position:absolute;
 	top: 100%;
+	overflow-y: scroll;
 }
 
 .ms-autobox-menu{
